@@ -530,7 +530,9 @@
                 } else if (type === 'SRV') {
                     recordItem.textContent = `Priority: ${record.priority}, Weight: ${record.weight}, Port: ${record.port}, Target: ${record.target}`;
                 } else {
-                    recordItem.textContent = record.data || record;
+                    const recordText = document.createElement('span');
+                    recordText.textContent = record.data || record;
+                    recordItem.appendChild(recordText);
                     
                     if ((type === 'A' || type === 'AAAA') && (record.data || record)) {
                         recordItem.setAttribute('data-ip', record.data || record);
@@ -656,7 +658,6 @@
             progressContainer.style.display = 'block';
             geoButton.disabled = true;
             
-            const ips = Array.from(ipElements).map(el => el.getAttribute('data-ip'));
             let completed = 0;
 
             for (const ipElement of ipElements) {
