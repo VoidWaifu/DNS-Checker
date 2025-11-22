@@ -105,7 +105,6 @@
         }
 
         .check-button {
-            width: 100%;
             padding: 14px 20px;
             background: linear-gradient(45deg, #1976d2, #64b5f6);
             border: none;
@@ -115,6 +114,20 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .geo-button {
+            padding: 14px 20px;
+            background: linear-gradient(45deg, #1976d2, #64b5f6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
         }
 
         .check-button:hover {
@@ -122,11 +135,29 @@
             box-shadow: 0 8px 16px rgba(25, 118, 210, 0.3);
         }
 
-        .check-button:disabled {
+        .geo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(56, 142, 60, 0.3);
+        }
+
+        .check-button:disabled, .geo-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
         }
 
         .progress-container {
@@ -190,6 +221,13 @@
             line-height: 1.4;
         }
 
+        .geo-info {
+            color: #4caf50;
+            font-weight: 600;
+            margin-left: 8px;
+            font-size: 0.85em;
+        }
+
         .error {
             color: #f44336;
             text-align: center;
@@ -248,12 +286,15 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
+        .notes-container {
+            margin-bottom: 20px;
+        }
+
         .note {
             text-align: center;
             color: #888;
             font-size: 0.8em;
-            margin-top: -15px;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
 
         @media (min-width: 480px) {
@@ -265,9 +306,13 @@
                 flex-direction: row;
             }
             
-            .check-button {
+            .buttons-container {
                 width: auto;
-                min-width: 140px;
+                min-width: 300px;
+            }
+
+            .buttons-row {
+                flex-direction: row;
             }
         }
 
@@ -289,9 +334,17 @@
                 gap: 15px;
             }
             
-            .check-button {
+            .buttons-container {
                 width: auto;
-                min-width: 160px;
+                min-width: 320px;
+            }
+
+            .buttons-row {
+                flex-direction: row;
+            }
+
+            .check-button, .geo-button {
+                width: auto;
             }
         }
     </style>
@@ -307,11 +360,19 @@
             <p id="subtitle">Проверьте все DNS записи любого домена</p>
         </div>
 
-        <div class="note" id="noteText">(Поиск DNS-записей обеспечивается Google.)</div>
+        <div class="notes-container">
+            <div class="note" id="noteText">(Поиск DNS-записей обеспечивается Google.)</div>
+            <div class="note" id="geoNoteText">(Определение геолокации обеспечивается IP-API.com.)</div>
+        </div>
 
         <div class="input-section">
             <input type="text" class="domain-input" id="domainInput" placeholder="Введите домен или ссылку)">
-            <button class="check-button" id="checkButton">Проверить DNS</button>
+            <div class="buttons-container">
+                <div class="buttons-row">
+                    <button class="check-button" id="checkButton">Проверить DNS</button>
+                    <button class="geo-button" id="geoButton">Определить геолокацию</button>
+                </div>
+            </div>
         </div>
 
         <div class="progress-container" id="progressContainer">
@@ -341,26 +402,36 @@
                 subtitle: "Проверьте все DNS записи любого домена",
                 placeholder: "Введите домен или ссылку",
                 checkButton: "Проверить DNS",
+                geoButton: "Определить геолокацию",
                 progressText: "Проверка DNS записей",
+                geoProgressText: "Определение геолокации",
                 resultsTitle: "Результаты проверки DNS",
                 noRecords: "Не удалось найти DNS записи для указанного домена",
                 enterDomain: "Пожалуйста, введите домен или ссылку для проверки",
+                checkDNSFirst: "Сначала проверьте DNS записи",
+                noIPsFound: "Не найдено IP адресов для определения геолокации",
                 siteButton: "Мой сайт",
                 records: "записи",
-                note: "(Поиск DNS-записей обеспечивается Google)"
+                note: "(Поиск DNS-записей обеспечивается Google.)",
+                geoNote: "(Определение геолокации обеспечивается IP-API.com.)"
             },
             en: {
                 title: "DNS Checker",
                 subtitle: "Check all DNS records of any domain",
                 placeholder: "Enter domain or URL",
                 checkButton: "Check DNS",
+                geoButton: "Detect Geolocation",
                 progressText: "Checking DNS records",
+                geoProgressText: "Detecting geolocation",
                 resultsTitle: "DNS Check Results",
                 noRecords: "No DNS records found for the specified domain",
                 enterDomain: "Please enter a domain or url to check",
+                checkDNSFirst: "Check DNS records first",
+                noIPsFound: "No IP addresses found for geolocation detection",
                 siteButton: "My Site",
                 records: "records",
-                note: "(DNS lookup is powered by Google)"
+                note: "(DNS lookup is powered by Google.)",
+                geoNote: "(Geolocation detection is powered by IP-API.com.)"
             }
         };
 
@@ -368,6 +439,7 @@
 
         const domainInput = document.getElementById('domainInput');
         const checkButton = document.getElementById('checkButton');
+        const geoButton = document.getElementById('geoButton');
         const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
@@ -380,6 +452,7 @@
         const langButton = document.getElementById('langButton');
         const siteButton = document.querySelector('.site-button');
         const noteText = document.getElementById('noteText');
+        const geoNoteText = document.getElementById('geoNoteText');
 
         function extractDomain(input) {
             let domain = input.trim();
@@ -407,9 +480,11 @@
             subtitle.textContent = t.subtitle;
             domainInput.placeholder = t.placeholder;
             checkButton.textContent = t.checkButton;
+            geoButton.textContent = t.geoButton;
             resultsTitle.textContent = t.resultsTitle;
             siteButton.textContent = t.siteButton;
             noteText.textContent = t.note;
+            geoNoteText.textContent = t.geoNote;
             langButton.textContent = currentLang === 'ru' ? 'EN' : 'RU';
         }
 
@@ -423,11 +498,12 @@
             errorMessage.style.display = 'none';
         }
 
-        function updateProgress(current, total) {
+        function updateProgress(current, total, isGeo = false) {
             const percentage = (current / total) * 100;
             progressFill.style.width = `${percentage}%`;
             const t = translations[currentLang];
-            progressText.innerHTML = `${t.progressText} (${current}/${total})<span class="loading-dots"></span>`;
+            const text = isGeo ? t.geoProgressText : t.progressText;
+            progressText.innerHTML = `${text} (${current}/${total})<span class="loading-dots"></span>`;
         }
 
         function createRecordSection(type, records) {
@@ -455,6 +531,10 @@
                     recordItem.textContent = `Priority: ${record.priority}, Weight: ${record.weight}, Port: ${record.port}, Target: ${record.target}`;
                 } else {
                     recordItem.textContent = record.data || record;
+                    
+                    if ((type === 'A' || type === 'AAAA') && (record.data || record)) {
+                        recordItem.setAttribute('data-ip', record.data || record);
+                    }
                 }
                 
                 section.appendChild(recordItem);
@@ -527,6 +607,7 @@
             progressContainer.style.display = 'block';
             results.style.display = 'none';
             checkButton.disabled = true;
+            geoButton.disabled = true;
             recordsContainer.innerHTML = '';
 
             const allRecords = {};
@@ -545,6 +626,7 @@
 
             progressContainer.style.display = 'none';
             checkButton.disabled = false;
+            geoButton.disabled = false;
             results.style.display = 'block';
 
             if (Object.keys(allRecords).length === 0) {
@@ -560,7 +642,53 @@
             }
         }
 
+        async function detectGeolocation() {
+            const t = translations[currentLang];
+            
+            const ipElements = document.querySelectorAll('[data-ip]');
+            
+            if (ipElements.length === 0) {
+                showError(t.checkDNSFirst);
+                return;
+            }
+
+            hideError();
+            progressContainer.style.display = 'block';
+            geoButton.disabled = true;
+            
+            const ips = Array.from(ipElements).map(el => el.getAttribute('data-ip'));
+            let completed = 0;
+
+            for (const ipElement of ipElements) {
+                const ip = ipElement.getAttribute('data-ip');
+                
+                try {
+                    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        const geoInfo = document.createElement('span');
+                        geoInfo.className = 'geo-info';
+                        geoInfo.textContent = `${data.country}, ${data.city}`;
+                        ipElement.appendChild(geoInfo);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching geolocation for ${ip}:`, error);
+                }
+                
+                completed++;
+                updateProgress(completed, ipElements.length, true);
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            progressContainer.style.display = 'none';
+            geoButton.disabled = false;
+        }
+
         checkButton.addEventListener('click', checkAllDNSRecords);
+
+        geoButton.addEventListener('click', detectGeolocation);
 
         domainInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
